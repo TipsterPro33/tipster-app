@@ -3,7 +3,6 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-# 🔥 SOLUCIÓN CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -12,22 +11,25 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/picks")
-def picks():
-    return {
-        "match": "San Lorenzo vs Velez",
-        "picks": [
-            {
-                "market": "Under 2.5",
-                "prob": 73,
-                "odds": 1.80,
-                "value": 16
+@app.get("/matches")
+def matches():
+    return [
+        {
+            "match": "San Lorenzo vs Velez",
+            "markets": {
+                "1X2": {"home": 34, "draw": 36, "away": 30},
+                "over_2_5": {"over": 26, "under": 74},
+                "btts": {"yes": 46, "no": 54}
             },
-            {
-                "market": "Draw",
-                "prob": 36,
-                "odds": 3.20,
-                "value": 5
-            }
-        ]
-    }
+            "analysis": "Partido cerrado, tendencia a pocos goles y empate probable."
+        },
+        {
+            "match": "Tigre vs Huracan",
+            "markets": {
+                "1X2": {"home": 22, "draw": 33, "away": 45},
+                "over_2_5": {"over": 34, "under": 66},
+                "btts": {"yes": 36, "no": 64}
+            },
+            "analysis": "Huracán llega mejor, Tigre con bajo poder ofensivo."
+        }
+    ]
