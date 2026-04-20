@@ -12,7 +12,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-API_KEY = "TU_API_KEY"
+API_KEY = "66a3113b48bf7c011b1296c159af91c3"
 
 leagues = {
     "Premier League": 39,
@@ -46,17 +46,21 @@ def get_matches():
 
             for m in res["response"]:
 
-                home = m["teams"]["home"]["name"]
-                away = m["teams"]["away"]["name"]
-
                 all_matches.append({
-                    "match": f"{home} vs {away}",
+                    "match": f"{m['teams']['home']['name']} vs {m['teams']['away']['name']}",
                     "league": league_name,
+
+                    "home": m["teams"]["home"]["name"],
+                    "away": m["teams"]["away"]["name"],
+                    "home_logo": m["teams"]["home"]["logo"],
+                    "away_logo": m["teams"]["away"]["logo"],
+
                     "markets": {
                         "1X2": {"home": 33, "draw": 34, "away": 33},
                         "over_2_5": {"over": 55, "under": 45},
                         "btts": {"yes": 50, "no": 50}
                     },
+
                     "analysis": "Modelo en desarrollo basado en forma reciente."
                 })
 
@@ -64,28 +68,22 @@ def get_matches():
             print("ERROR:", e)
             continue
 
-    # 🔥 FALLBACK SEGURO
+    # 🔥 fallback si la API falla
     if len(all_matches) == 0:
         return [
             {
                 "match": "Manchester City vs Arsenal",
                 "league": "Premier League",
+                "home": "Manchester City",
+                "away": "Arsenal",
+                "home_logo": "https://media.api-sports.io/football/teams/50.png",
+                "away_logo": "https://media.api-sports.io/football/teams/42.png",
                 "markets": {
                     "1X2": {"home": 52, "draw": 25, "away": 23},
                     "over_2_5": {"over": 66, "under": 34},
                     "btts": {"yes": 68, "no": 32}
                 },
                 "analysis": "City dominante, Arsenal peligroso en transición."
-            },
-            {
-                "match": "River Plate vs Boca Juniors",
-                "league": "Argentina",
-                "markets": {
-                    "1X2": {"home": 40, "draw": 30, "away": 30},
-                    "over_2_5": {"over": 48, "under": 52},
-                    "btts": {"yes": 55, "no": 45}
-                },
-                "analysis": "Clásico cerrado, tendencia a pocos goles."
             }
         ]
 
