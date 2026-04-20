@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import requests
 
 app = FastAPI()
 
@@ -11,33 +12,55 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+API_KEY = "TU_API_KEY"
+
+# ligas importantes
+leagues = {
+    "Premier League": 39,
+    "La Liga": 140,
+    "Serie A": 135,
+    "Bundesliga": 78,
+    "Ligue 1": 61,
+    "Argentina": 128,
+    "Brasil": 71,
+    "MLS": 253
+}
+
 @app.get("/matches")
 def get_matches():
-    return [
-        {
-            "match": "Real Madrid vs Barcelona",
-            "league": "La Liga",
-            "referee": "Antonio Mateu",
-            "stadium": "Santiago Bernabéu",
-            "date": "Hoy 21:00",
-            "markets": {
-                "1X2": {"home": 45, "draw": 28, "away": 27},
-                "over_2_5": {"over": 62, "under": 38},
-                "btts": {"yes": 70, "no": 30}
-            },
-            "analysis": "Partido de alto ritmo, tendencia a goles."
-        },
-        {
-            "match": "Manchester City vs Arsenal",
-            "league": "Premier League",
-            "referee": "Michael Oliver",
-            "stadium": "Etihad Stadium",
-            "date": "Hoy 18:30",
-            "markets": {
-                "1X2": {"home": 52, "draw": 25, "away": 23},
-                "over_2_5": {"over": 66, "under": 34},
-                "btts": {"yes": 68, "no": 32}
-            },
-            "analysis": "City dominante, Arsenal peligroso en transición."
-        }
-    ]
+
+    all_matches = []
+
+    headers = {
+        "x-apisports-key": API_KEY
+    }
+
+    for league_name, league_id in leagues.items():
+
+        url = f"https://v3.football.api-sports.io/fixtures?league={league_id}&next=3"
+
+        try:
+            res = requests.get(url, headers=headers).json()
+
+            for m in res.get("response", []):
+
+                all_matches.append({
+                    "match": f"{m['teams']['home']['name']} vs {m['teams']['away']['name']}",
+                    "league": league_name,
+                    "date": m["fixture"]["date"],
+                    "stadium": m["fixture"]["venue"]["name"],
+                    "referee": m["fixture"]["referee"],
+
+                    "markets": {
+                        "1X2": {"home": 33, "draw": 34, "away": 33},
+                        "over_2_5": {"over": 55, "under": 45},
+                        "btts": {"yes": 50, "no": 50}
+                    },
+
+                    "analysis": "Modelo en desarrollo basado en contexto y forma."
+                })
+
+        except:
+            continue
+
+    return all_matches
