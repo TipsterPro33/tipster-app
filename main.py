@@ -25,7 +25,11 @@ def get_matches():
         "x-apisports-key": API_KEY
     }
 
-    res = requests.get(url, headers=headers).json()
+    res = response = requests.get(url, headers=headers)
+
+print(response.text)  
+
+res = response.json()
 
     matches = []
 
