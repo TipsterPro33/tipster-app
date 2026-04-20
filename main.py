@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import requests
+from datetime import date
 
 app = FastAPI()
 
@@ -12,13 +13,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 🔥 PEGÁ TU API KEY ACÁ
-API_KEY = "66a3113b48bf7c011b1296c159af91c3"
+API_KEY = "TU_API_KEY"
 
 @app.get("/matches")
 def get_matches():
 
-    url = "https://v3.football.api-sports.io/fixtures?league=128&season=2024"
+    today = date.today().strftime("%Y-%m-%d")
+
+    url = f"https://v3.football.api-sports.io/fixtures?date={today}"
 
     headers = {
         "x-apisports-key": API_KEY
@@ -28,18 +30,29 @@ def get_matches():
 
     matches = []
 
-    for m in res["response"][:5]:
+    for m in res["response"][:6]:
+
         home = m["teams"]["home"]["name"]
         away = m["teams"]["away"]["name"]
 
+        referee = m["fixture"]["referee"]
+        stadium = m["fixture"]["venue"]["name"]
+        date_match = m["fixture"]["date"]
+
         matches.append({
             "match": f"{home} vs {away}",
+            "referee": referee,
+            "stadium": stadium,
+            "date": date_match,
+
             "markets": {
                 "1X2": {"home": 33, "draw": 34, "away": 33},
                 "over_2_5": {"over": 40, "under": 60},
                 "btts": {"yes": 45, "no": 55}
             },
-            "analysis": "Datos en construcción (modelo en desarrollo)"
+
+            "analysis": "Modelo en desarrollo: partido equilibrado."
         })
 
+    return matches
     return matches
