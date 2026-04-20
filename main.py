@@ -1,7 +1,5 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import requests
-from datetime import date
 
 app = FastAPI()
 
@@ -13,49 +11,33 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-API_KEY = "TU_API_KEY"
-
 @app.get("/matches")
 def get_matches():
-
-    today = date.today().strftime("%Y-%m-%d")
-
-    url = "https://v3.football.api-sports.io/fixtures?next=50"
-    headers = {
-        "x-apisports-key": API_KEY
-    }
-
-    res = response = requests.get(url, headers=headers)
-
-print(response.text)  
-
-res = response.json()
-
-    matches = []
-
-    for m in res["response"][:6]:
-
-        home = m["teams"]["home"]["name"]
-        away = m["teams"]["away"]["name"]
-
-        referee = m["fixture"]["referee"]
-        stadium = m["fixture"]["venue"]["name"]
-        date_match = m["fixture"]["date"]
-
-        matches.append({
-            "match": f"{home} vs {away}",
-            "referee": referee,
-            "stadium": stadium,
-            "date": date_match,
-
+    return [
+        {
+            "match": "Real Madrid vs Barcelona",
+            "league": "La Liga",
+            "referee": "Antonio Mateu",
+            "stadium": "Santiago Bernabéu",
+            "date": "Hoy 21:00",
             "markets": {
-                "1X2": {"home": 33, "draw": 34, "away": 33},
-                "over_2_5": {"over": 40, "under": 60},
-                "btts": {"yes": 45, "no": 55}
+                "1X2": {"home": 45, "draw": 28, "away": 27},
+                "over_2_5": {"over": 62, "under": 38},
+                "btts": {"yes": 70, "no": 30}
             },
-
-            "analysis": "Modelo en desarrollo: partido equilibrado."
-        })
-
-    return matches
-    return matches
+            "analysis": "Partido de alto ritmo, tendencia a goles."
+        },
+        {
+            "match": "Manchester City vs Arsenal",
+            "league": "Premier League",
+            "referee": "Michael Oliver",
+            "stadium": "Etihad Stadium",
+            "date": "Hoy 18:30",
+            "markets": {
+                "1X2": {"home": 52, "draw": 25, "away": 23},
+                "over_2_5": {"over": 66, "under": 34},
+                "btts": {"yes": 68, "no": 32}
+            },
+            "analysis": "City dominante, Arsenal peligroso en transición."
+        }
+    ]
