@@ -13,7 +13,7 @@ app.add_middleware(
 )
 
 # 🔥 PEGÁ TU API KEY ACÁ
-API_KEY = 66a3113b48bf7c011b1296c159af91c3
+API_KEY = "66a3113b48bf7c011b1296c159af91c3"
 
 @app.get("/matches")
 def get_matches():
