@@ -20,7 +20,7 @@ def get_matches():
 
     today = date.today().strftime("%Y-%m-%d")
 
-    url = f"https://v3.football.api-sports.io/fixtures?date={today}"
+    url = "https://v3.football.api-sports.io/fixtures?next=10"
 
     headers = {
         "x-apisports-key": API_KEY
