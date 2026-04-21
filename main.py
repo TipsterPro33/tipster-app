@@ -13,7 +13,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-API_KEY = "TU_API_KEY"
+API_KEY = "66a3113b48bf7c011b1296c159af91c3"
 ODDS_KEY = "TU_ODDS_API_KEY"
 
 leagues = [39,140,135,78,61,128,71,253]
