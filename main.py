@@ -14,7 +14,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-API_KEY = "66a3113b48bf7c011b1296c159af91c3"
+API_KEY = "TU_API_KEY"
 
 def poisson(lmbda, k):
     return (lmbda**k * math.exp(-lmbda)) / math.factorial(k)
@@ -29,10 +29,6 @@ def calc_probs(home_xg, away_xg):
             else: aw+=p
     return hw*100, dr*100, aw*100
 
-@app.get("/")
-def root():
-    return {"status": "ok"}
-
 @app.get("/matches")
 def get_matches():
 
@@ -44,17 +40,13 @@ def get_matches():
     try:
         res = requests.get(url, headers=headers, timeout=10).json()
 
-        if "response" in res and len(res["response"]) > 0:
-
+        if "response" in res:
             for m in res["response"]:
 
                 home = m["teams"]["home"]
                 away = m["teams"]["away"]
 
-                home_xg = 1.6
-                away_xg = 1.3
-
-                hw, dr, aw = calc_probs(home_xg, away_xg)
+                hw, dr, aw = calc_probs(1.6, 1.3)
 
                 matches.append({
                     "league": m["league"]["name"],
@@ -79,10 +71,12 @@ def get_matches():
                 })
 
     except Exception as e:
-        print("ERROR API:", e)
+        print("ERROR:", e)
 
-    # 🔥 FALLBACK (SIEMPRE FUNCIONA)
-    if len(matches) == 0:
+    # 🔥 CLAVE: fallback SIEMPRE si no hay datos
+    if len(matches) < 5:
+
+        matches = []  # reset
 
         teams = [
             ("Manchester City",50),
@@ -90,10 +84,14 @@ def get_matches():
             ("Real Madrid",541),
             ("Barcelona",529),
             ("Bayern",157),
-            ("PSG",85)
+            ("PSG",85),
+            ("Juventus",496),
+            ("Milan",489),
+            ("River Plate",435),
+            ("Boca Juniors",451)
         ]
 
-        for i in range(10):
+        for i in range(15):
 
             h = random.choice(teams)
             a = random.choice(teams)
@@ -101,16 +99,28 @@ def get_matches():
             if h == a:
                 continue
 
+            hw, dr, aw = calc_probs(1.7, 1.3)
+
             matches.append({
-                "league": "Demo",
+                "league": "Demo (API limitada)",
                 "home": h[0],
                 "away": a[0],
                 "home_logo": f"https://media.api-sports.io/football/teams/{h[1]}.png",
                 "away_logo": f"https://media.api-sports.io/football/teams/{a[1]}.png",
 
-                "prob": {"home":50,"draw":25,"away":25},
-                "odds": {"home":2.0,"draw":3.2,"away":3.5},
-                "analysis": "Modo fallback activo (API limitada)."
+                "prob": {
+                    "home": round(hw),
+                    "draw": round(dr),
+                    "away": round(aw)
+                },
+
+                "odds": {
+                    "home": round(100/hw,2),
+                    "draw": round(100/dr,2),
+                    "away": round(100/aw,2)
+                },
+
+                "analysis": "Modo fallback activo."
             })
 
     return matches
