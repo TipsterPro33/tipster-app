@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import requests
 import math
-import random
 
 app = FastAPI()
 
@@ -13,111 +13,71 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-teams = [
-    ("Manchester City", 2.5),
-    ("Arsenal", 2.0),
-    ("Real Madrid", 2.3),
-    ("Barcelona", 2.1),
-    ("Bayern", 2.6),
-    ("PSG", 2.4),
-    ("Juventus", 1.8),
-    ("Milan", 1.7),
-    ("River", 1.9),
-    ("Boca", 1.8),
-    ("Flamengo", 2.2),
-    ("Palmeiras", 2.1),
-    ("Inter Miami", 1.6),
-    ("LA Galaxy", 1.7)
-]
+API_KEY = "TU_API_KEY"
+ODDS_KEY = "TU_ODDS_API_KEY"
 
-leagues = [
-    "Premier League",
-    "La Liga",
-    "Serie A",
-    "Bundesliga",
-    "Ligue 1",
-    "Argentina",
-    "Brasil",
-    "MLS"
-]
+leagues = [39,140,135,78,61,128,71,253]
 
 def poisson(lmbda, k):
     return (lmbda**k * math.exp(-lmbda)) / math.factorial(k)
 
-def match_prob(home_xg, away_xg):
-
-    home_win = 0
-    draw = 0
-    away_win = 0
-
+def calc_probs(home_xg, away_xg):
+    hw = dr = aw = 0
     for i in range(6):
         for j in range(6):
-            p = poisson(home_xg, i) * poisson(away_xg, j)
-
-            if i > j:
-                home_win += p
-            elif i == j:
-                draw += p
-            else:
-                away_win += p
-
-    return home_win, draw, away_win
+            p = poisson(home_xg,i)*poisson(away_xg,j)
+            if i>j: hw+=p
+            elif i==j: dr+=p
+            else: aw+=p
+    return hw*100, dr*100, aw*100
 
 @app.get("/matches")
 def get_matches():
 
+    headers = {"x-apisports-key": API_KEY}
     matches = []
 
-    for i in range(25):
+    for league in leagues:
 
-        home = random.choice(teams)
-        away = random.choice(teams)
+        url = f"https://v3.football.api-sports.io/fixtures?league={league}&next=5"
 
-        while home == away:
-            away = random.choice(teams)
+        try:
+            res = requests.get(url, headers=headers).json()
 
-        home_xg = home[1]
-        away_xg = away[1]
+            for m in res.get("response", []):
 
-        hw, dr, aw = match_prob(home_xg, away_xg)
+                home = m["teams"]["home"]
+                away = m["teams"]["away"]
 
-        # convertir a %
-        hw *= 100
-        dr *= 100
-        aw *= 100
+                # xG estimado simple (luego mejoramos)
+                home_xg = 1.5
+                away_xg = 1.2
 
-        # cuotas tipo casa
-        odd_home = round(100 / hw, 2)
-        odd_draw = round(100 / dr, 2)
-        odd_away = round(100 / aw, 2)
+                hw, dr, aw = calc_probs(home_xg, away_xg)
 
-        value = max(hw, dr, aw)
+                matches.append({
+                    "league": m["league"]["name"],
+                    "home": home["name"],
+                    "away": away["name"],
+                    "home_logo": home["logo"],
+                    "away_logo": away["logo"],
 
-        matches.append({
-            "league": random.choice(leagues),
-            "home": home[0],
-            "away": away[0],
+                    "prob": {
+                        "home": round(hw),
+                        "draw": round(dr),
+                        "away": round(aw)
+                    },
 
-            "markets": {
-                "1X2": {
-                    "home": round(hw),
-                    "draw": round(dr),
-                    "away": round(aw)
-                },
-                "odds": {
-                    "home": odd_home,
-                    "draw": odd_draw,
-                    "away": odd_away
-                }
-            },
+                    "odds": {
+                        "home": round(100/hw,2),
+                        "draw": round(100/dr,2),
+                        "away": round(100/aw,2)
+                    },
 
-            "pick": "HOME" if hw > aw else "AWAY",
-            "confidence": round(value),
+                    "analysis": "Modelo Poisson basado en xG estimado."
+                })
 
-            "analysis": "Modelo Poisson basado en expectativa de gol (xG)."
-        })
+        except:
+            continue
 
-    # 🔥 ordenar por mejor pick
-    matches = sorted(matches, key=lambda x: x["confidence"], reverse=True)
-
-    return matches
+    return matches[:40]
