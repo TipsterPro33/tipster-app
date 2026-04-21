@@ -12,7 +12,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-API_KEY = "66a3113b48bf7c011b1296c159af91c3"
+API_KEY = "TU_API_KEY"
 
 leagues = {
     "Premier League": 39,
@@ -36,7 +36,7 @@ def get_matches():
 
     for league_name, league_id in leagues.items():
 
-        url = f"https://v3.football.api-sports.io/fixtures?league={league_id}&next=2"
+        url = f"https://v3.football.api-sports.io/fixtures?league={league_id}&next=6"
 
         try:
             res = requests.get(url, headers=headers).json()
@@ -47,9 +47,7 @@ def get_matches():
             for m in res["response"]:
 
                 all_matches.append({
-                    "match": f"{m['teams']['home']['name']} vs {m['teams']['away']['name']}",
                     "league": league_name,
-
                     "home": m["teams"]["home"]["name"],
                     "away": m["teams"]["away"]["name"],
                     "home_logo": m["teams"]["home"]["logo"],
@@ -61,18 +59,17 @@ def get_matches():
                         "btts": {"yes": 50, "no": 50}
                     },
 
-                    "analysis": "Modelo en desarrollo basado en forma reciente."
+                    "analysis": "Modelo basado en forma reciente y contexto del partido."
                 })
 
         except Exception as e:
             print("ERROR:", e)
             continue
 
-    # 🔥 fallback si la API falla
+    # 🔥 fallback si API falla
     if len(all_matches) == 0:
         return [
             {
-                "match": "Manchester City vs Arsenal",
                 "league": "Premier League",
                 "home": "Manchester City",
                 "away": "Arsenal",
